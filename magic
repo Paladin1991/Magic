@@ -1,0 +1,263 @@
+#!/bin/bash
+
+# Colors variables
+
+f=3 b=4
+for j in f b; do
+  for i in {0..7}; do
+    printf -v $j$i %b "\e[${!j}${i}m"
+  done
+done
+d=$'\e[1m'
+t=$'\e[0m'
+v=$'\e[7m'
+p=$'\e[5m'
+
+# Layout
+
+clear
+
+cat << EOF
+  $f0▄▄ $f1▄▄ $f2▄▄ $f3▄▄ $f4▄▄ $f5▄▄ $f6▄▄ $f7▄▄
+
+  ███╗░░░███╗░█████╗░░██████╗░██╗░█████╗░
+  ████╗░████║██╔══██╗██╔════╝░██║██╔══██╗
+  ██╔████╔██║███████║██║░░██╗░██║██║░░╚═╝
+  ██║╚██╔╝██║██╔══██║██║░░╚██╗██║██║░░██╗
+  ██║░╚═╝░██║██║░░██║╚██████╔╝██║╚█████╔╝
+  ╚═╝░░░░░╚═╝╚═╝░░╚═╝░╚═════╝░╚═╝░╚════╝░
+                  $f0▄▄ $f1▄▄ $f2▄▄ $f3▄▄ $f4▄▄ $f5▄▄ $f6▄▄ $f7▄▄
+
+EOF
+
+# Variables
+
+# Get colors theme
+Get_Theme_Color=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep color-theme | awk '{print $3}' | sed 's/;//g')
+Get_Theme_Destac_Color=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep color-font | awk '{print $3}' | sed 's/;//g')
+Get_Theme_Text_Color=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep normal-font | awk '{print $3}' | sed 's/;//g')
+
+# Get eww colors
+Get_Eww_Color=$(cat ~/.config/eww/colors.scss | grep base-color | awk '{print $2}' | sed 's/;//g')
+Get_Eww_Destac_Color=$(cat ~/.config/eww/colors.scss | grep destac-color | awk '{print $2}' | sed 's/;//g')
+Get_Eww_Font_Color=$(cat ~/.config/eww/colors.scss | grep font-color | awk '{print $2}' | sed 's/;//g')
+
+# Get Bars Colors
+Polybar_Color=$(cat ~/.config/polybar/config | grep background | sed -n 1p | awk '{print $3}')
+Polybar_Destac_Color=$(cat ~/.config/polybar/config | grep background-alt | sed -n 1p | awk '{print $3}')
+Polybar_Font_Color=$(cat ~/.config/polybar/config | grep foreground | sed -n 1p | awk '{print $3}')
+
+# Get Termite Colors
+Termite_Back_Color=$(cat ~/.config/termite/config | grep background | awk '{print $3}')
+Termite_Fore=$(cat ~/.config/termite/config | grep foreground | awk '{print $3}' | sed -n 1p)
+Termite_Fore_Bold=$(cat ~/.config/termite/config | grep foreground_bold | awk '{print $3}')
+
+# Functions get wallpaper colors
+
+Get_Wallpaper_Color(){
+
+echo -e "${f1}----------------------------------------$t"
+echo -e "${f2}::${t} How many colors should be displayed?"
+echo -e "${f1}-> \c$t"
+
+read -e -p "${t}Number of colors${f1} = " color
+Image=$(cat ~/.fehbg | sed -n 2p | cut -d "'" -f2)
+Colors=$(convert $Image -format %c -colorspace LAB -colors $color histogram:info:- | sort -n -r | awk '{print $3}' | cut -c -7)
+Image_Name=$(cat ~/.fehbg | sed 's/.*\///g' | sed -n 2p)
+echo -e "${f1}--------------------------------------------------$t"
+echo -e "${f1}:: ${t}${f2}Ready! The image was separated into ${f1}$color$t ${f2}colors$t"
+echo -e "${f1}:: ${t}${f2}Would you like to save the color scheme?$t (${f2}y$t/${f1}n$t)"
+echo -e "${f1}-> \c$t"
+
+read -e yes_no
+
+  case $yes_no in
+    
+    *y|Y|yes|Yes*) echo -e "====================================
+Image name: $Image_Name
+Total Colors: $color
+Date: '`date`'
+====================================" >> ~/.color.txt
+echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.color.txt
+echo -e "${f1}----------------------------------------------------------$t"
+echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.colors.txt"
+echo -e "${f1}----------------------------------------------------------$t"
+echo " "
+      ;;
+    
+    *) echo "Option invalid, answer Yes or No"  ;;
+  esac
+}
+
+# Option 0. Use wallpaper
+echo -e "${f2}::${t} Capture the colors of the wallpaper? ${f2}y$t/${f1}n$t"
+echo -e "${f1}-> \c$t"
+read -e rep
+
+  if [[ $rep = y ]]; then
+    Get_Wallpaper_Color
+  fi
+
+# Option 1. Select theme color
+echo -e "${f1}------------$t"
+echo -e "Step ${f2}1 ${t}of ${f6}3$t"
+echo -e "${f1}------------$t"
+echo -e "Select the color to be used as the base of the theme."
+echo -e "${f1}-> \c$t\n"
+read -e -p "${t}Base Color${f1} = " opc1
+
+echo -e "${f1}------------$t"
+echo -e "${t}Step ${f2}2 ${t}of ${f6}3$t"
+echo -e "${f1}------------$t"
+echo -e "Section the color that will serve as the highlight"
+echo -e "${f1}-> \c$t\n"
+read -e -p "${t}Highlight Color${f1} = " opc2
+
+echo -e "${f1}------------$t"
+echo -e "${t}Step ${f2}3 ${t}of ${f6}3$t"
+echo -e "${f1}------------$t"
+echo -e "Select the color that will be applied to text."
+echo -e "${f1}-> \c$t\n"
+read -e -p "${t}Text Color${f1} = " opc3
+
+op1=$(echo "$opc1" | wc -c)
+op2=$(echo "$opc2" | wc -c)
+op3=$(echo "$opc3" | wc -c)
+
+ok="[${f2} ${t}]"
+erro="[${f1} ${t}]"
+
+clear
+echo "${t}These are the current colors."
+echo -e "${f1}==============================$t"
+echo -e "Base                 `colr " " -b "$Get_Theme_Color"` $Get_Theme_Color"
+echo -e "Highlight            `colr " " -b "$Get_Theme_Destac_Color"` $Get_Theme_Destac_Color"
+echo -e "Fonts                `colr " " -b "$Get_Theme_Text_Color"` $Get_Theme_Text_Color"
+echo -e "${f1}==============================$t"
+echo  " "
+echo "${t}These will be the colors used"
+echo -e "${f1}==============================$t"
+if [[ $op1 -eq 8 ]]; then
+  echo "$ok Base            `colr " " -b " $opc1 "` $opc1"
+else
+  echo "$erro Base            $opc1"
+fi
+if [[ $op2 -eq 8 ]]; then
+  echo "$ok Highlight       `colr " " -b " $opc2 "` $opc2"
+else
+  echo "$erro Highlight      $opc2"
+fi
+if [[ $op3 -eq 8 ]]; then
+  echo "$ok Fonts           `colr " " -b " $opc3 "` $opc3"
+else
+  echo "$erro Fonts           $opc3"
+fi
+echo -e "${f1}==============================$t"
+echo -e "${f1}ATTENTION!$t Do not use identical colors, this can cause problems."
+echo "Would you like to proceed with the changes? ${f2}y$t/${f1}n$t"
+echo -e "${f1}-> \c$t\n"
+
+Restart_Bar(){
+  if pgrep polybar; then
+    killall -q polybar
+    sleep 1 &
+    polybar -c ~/.config/polybar/config bar1 &
+    polybar -c ~/.config/polybar/config bar2 &
+    polybar -c ~/.config/polybar/config bar3 &
+    exit 1
+  else
+    polybar -c ~/.config/polybar/config bar1 &
+    polybar -c ~/.config/polybar/config bar2 &
+    polybar -c ~/.config/polybar/config bar3 &
+  fi
+}
+
+Change_Everything(){
+
+msg_erro="One or more colors are not correct.\nCheck the output above to identify the error!"
+
+# Base Colors
+  if [[ $op1 -eq 8 ]]; then
+    echo  " "
+    echo -e "${f1}=============================$t"
+
+    # Termite
+    sed -i "s/$Termite_Back_Color/$opc1/g" ~/.config/termite/config
+    echo "$ok Termite"
+
+    # Gtk theme
+    sed -i "s/$Get_Theme_Color/$opc1/g" ~/.themes/Midnight/gtk-3.0/colors.css
+    echo "$ok Gtk Theme"
+
+    # Polybar
+    sed -i "s/$Polybar_Color/$opc1/g" ~/.config/polybar/config
+    echo "$ok Polybar"
+
+    # Eww
+    sed -i "s/$Get_Eww_Color/$opc1/g" ~/.config/eww/colors.scss
+    echo "$ok Eww"
+
+    echo -e "${f1}=============================$t"
+    echo -e "If any of the changes have not been applied,\nplease log in again, or restart your window manager."
+    eww reload
+  else
+    echo -e "$msg_erro"
+    exit 1
+  fi
+
+# Highlight
+  if [[ $op2 -eq 8 ]]; then
+    
+    # Gtk Theme
+    sed -i "s/$Get_Theme_Destac_Color/$opc2/g" ~/.themes/Midnight/gtk-3.0/colors.css
+
+    # Polybar
+    sed -i "s/$Polybar_Destac_Color/$opc2/g" ~/.config/polybar/config
+
+    # Eww
+    sed -i "s/$Get_Eww_Destac_Color/$opc2/g" ~/.config/eww/colors.scss
+    eww reload
+
+  else
+    echo -e "$msg_erro"
+    exit 1
+  fi
+
+# Font 
+  if [[ $op3 -eq 8 ]]; then
+
+    # Gtk Theme
+    sed -i "s/$Get_Theme_Text_Color/$opc3/g" ~/.themes/Midnight/gtk-3.0/colors.css
+
+    # Eww
+    sed -i "s/$Get_Eww_Font_Color/$opc3/g" ~/.config/eww/colors.scss
+    eww reload
+
+    # Polybar
+    sed -i "s/$Polybar_Font_Color/$opc3/g" ~/.config/polybar/config
+
+    # Termite
+    sed -i "s/$Termite_Fore/$opc3/g" ~/.config/termite/config
+    sed -i "s/$Termite_Fore_Bold/$opc3´/g" ~/.config/termite/config
+
+  else
+    echo -e "$msg_erro"
+    exit 1
+  fi
+
+  sleep 5 &
+  Restart_Bar &> /dev/null &
+  
+}
+
+read -e opc
+
+
+case $opc in
+    y|Y) Change_Everything & 
+         ;;
+
+    n|N) echo "No changes will be made."
+         sleep 3 
+         clear
+esac
