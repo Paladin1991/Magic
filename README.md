@@ -15,7 +15,7 @@ So that it is possible to capture the background colors
 For the selected colors to be displayed on the terminal.  
 [Colr](https://pypi.org/project/Colr/)  
 
-##How to use  
+##  How to use  
 
 At the moment this script works only in my settings,  
 because I did it for my own use, to make things easier for me.  
@@ -63,7 +63,7 @@ and follow the steps, always paying attention to what is written.
 3. Choose if you would like to save the captured colors in a file located in your home,  
 with the name "colors.txt"
 
-## All steps can be skipped by answering "n" (No), or by pressing (Enter) in step number one.
+#### All steps can be skipped by answering "n" (No), or by pressing (Enter) in step number one.
 
 4. Choose the colors that will be used as the base "Background" of the theme.  
 5. Choose the color that will be used as the highlight in the theme.  
