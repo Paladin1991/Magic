@@ -86,7 +86,13 @@ There is a possibility that something goes wrong,
 due to a script failure or human speech. If this happens don't worry,  
 run the program again and choose different colors,  
 everything will be fine. If nothing is resolved,  
-you can fix it manually in the configuration scripts.
+you can fix it manually in the configuration scripts.  
+
+## Bugs
+
+[] For no apparent reason, the program uses only one color in all instances,  
+often decaying the background  
+colors of the same color as the text.
 
 
 
