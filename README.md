@@ -5,7 +5,12 @@ A shell script capable of altering aspects of the window manager, in the visual 
 
 ### Dependencies
 
-**Few dependencies are necessary for the operation of this script**
+**Few dependencies are necessary for the operation of this script**  
+
+* feh  
+To set backgrounds. The script uses  
+".fehbg" to identify the current background.  
+[Feh](https://github.com/derf/feh)
 
 * imagemagick  
 So that it is possible to capture the background colors  
