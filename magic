@@ -43,14 +43,23 @@ Get_Eww_Destac_Color=$(cat ~/.config/eww/colors.scss | grep destac-color | awk '
 Get_Eww_Font_Color=$(cat ~/.config/eww/colors.scss | grep font-color | awk '{print $2}' | sed 's/;//g')
 
 # Get Bars Colors
+# Polybar
 Polybar_Color=$(cat ~/.config/polybar/config | grep background | sed -n 1p | awk '{print $3}')
 Polybar_Destac_Color=$(cat ~/.config/polybar/config | grep background-alt | sed -n 1p | awk '{print $3}')
 Polybar_Font_Color=$(cat ~/.config/polybar/config | grep foreground | sed -n 1p | awk '{print $3}')
+# Get Tint2 Colors
+Tint2_Background=$(cat ~/.config/tint2/tint2rc | grep background_color | sed -n 1p | awk '{print $3}')
+Tint2_Font_Color=$(cat ~/.config/tint2/tint2rc | grep clock_font_color | sed -n 1p | awk '{print $3}')
 
 # Get Termite Colors
 Termite_Back_Color=$(cat ~/.config/termite/config | grep background | awk '{print $3}')
 Termite_Fore=$(cat ~/.config/termite/config | grep foreground | awk '{print $3}' | sed -n 1p)
 Termite_Fore_Bold=$(cat ~/.config/termite/config | grep foreground_bold | awk '{print $3}')
+
+# Get WM's Colors
+Fvwm_Color=$(cat ~/.fvwm/Config/COLORS | grep Tint | awk '{print $2}')
+Hbwm_Color=$(cat ~/.config/herbstluftwm/autostart | grep colour_normal | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
+Hbwm_Iner=$(cat ~/.config/herbstluftwm/autostart | grep inner_acive | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
 
 # Functions get wallpaper colors
 
@@ -158,69 +167,97 @@ echo "Would you like to proceed with the changes? ${f2}y$t/${f1}n$t"
 echo -e "${f1}-> \c$t\n"
 
 Restart_Bar(){
-  if pgrep polybar; then
+  if pgrep polybar &> /dev/null; then
     killall -q polybar
-    sleep 1 &
     polybar -c ~/.config/polybar/config bar1 &
     polybar -c ~/.config/polybar/config bar2 &
     polybar -c ~/.config/polybar/config bar3 &
-    exit 1
-  else
-    polybar -c ~/.config/polybar/config bar1 &
-    polybar -c ~/.config/polybar/config bar2 &
-    polybar -c ~/.config/polybar/config bar3 &
+  elif pgrep tint2 &> /dev/null; then
+    killall -q tint2
+    tint2 &
   fi
 }
 
 Change_Everything(){
 
 msg_erro="One or more colors are not correct.\nCheck the output above to identify the error!"
+get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
 
 # Base Colors
   if [[ $op1 -eq 8 ]]; then
     echo  " "
     echo -e "${f1}=============================$t"
 
+    # WM's
+    #Fvwm
+    if [[ $get_wm == FVWM ]]; then
+      sed -i "s/$Fvwm_Color/$opc1/g" ~/.fvwm/Config/COLORS
+      echo "$ok Fvwm"
+    # Herbstluftwm
+    elif [[ $get_wm == herbstluftwm ]]; then
+      sed -i "s/$Hbwm_Color/$opc1/g" ~/.config/herbstluftwm/autostart
+      echo "$ok Herbstluftwm"
+    fi
+
+    #Terminais
     # Termite
     sed -i "s/$Termite_Back_Color/$opc1/g" ~/.config/termite/config
-    echo "$ok Termite"
+    echo "$ok Terminal"
 
     # Gtk theme
     sed -i "s/$Get_Theme_Color/$opc1/g" ~/.themes/Midnight/gtk-3.0/colors.css
     echo "$ok Gtk Theme"
 
-    # Polybar
-    sed -i "s/$Polybar_Color/$opc1/g" ~/.config/polybar/config
-    echo "$ok Polybar"
+    # Bars
+    if pgrep polybar &> /dev/null; then
+      sed -i "s/$Polybar_Color/$opc1/g" ~/.config/polybar/config
+        Restart_Bar &> /dev/null
+          echo "$ok Polybar"
+    elif pgrep tint2 &> /dev/null; then
+      sed -i "s/$Tint2_Background/$opc1/g" ~/.config/tint2/tint2rc
+        Restart_Bar &> /dev/null
+          echo "$ok Tint2"
+    fi
 
     # Eww
-    sed -i "s/$Get_Eww_Color/$opc1/g" ~/.config/eww/colors.scss
-    echo "$ok Eww"
+    if pgrep eww &> /dev/null; then
+      sed -i "s/$Get_Eww_Color/$opc1/g" ~/.config/eww/colors.scss
+        eww reload
+          echo "$ok Eww"
+    fi
 
     echo -e "${f1}=============================$t"
     echo -e "If any of the changes have not been applied,\nplease log in again, or restart your window manager."
-    eww reload
   else
     echo -e "$msg_erro"
-    exit 1
   fi
 
 # Highlight
   if [[ $op2 -eq 8 ]]; then
     
+    # WM's
+    # Herbstluftwm
+
+    if [[ $get_wm == herbstluftwm ]]; then
+      sed -i "s/$Hbwm_Iner/$opc2/g" ~/.config/herbstluftwm/autostart
+    fi
+
     # Gtk Theme
     sed -i "s/$Get_Theme_Destac_Color/$opc2/g" ~/.themes/Midnight/gtk-3.0/colors.css
 
     # Polybar
-    sed -i "s/$Polybar_Destac_Color/$opc2/g" ~/.config/polybar/config
+    if pgrep polybar &> /dev/null; then
+      sed -i "s/$Polybar_Destac_Color/$opc2/g" ~/.config/polybar/config
+    fi
 
     # Eww
-    sed -i "s/$Get_Eww_Destac_Color/$opc2/g" ~/.config/eww/colors.scss
-    eww reload
+    if pgrep eww &> /dev/null; then
+      sed -i "s/$Get_Eww_Destac_Color/$opc2/g" ~/.config/eww/colors.scss
+        eww reload
+    fi
 
   else
     echo -e "$msg_erro"
-    exit 1
   fi
 
 # Font 
@@ -230,11 +267,19 @@ msg_erro="One or more colors are not correct.\nCheck the output above to identif
     sed -i "s/$Get_Theme_Text_Color/$opc3/g" ~/.themes/Midnight/gtk-3.0/colors.css
 
     # Eww
-    sed -i "s/$Get_Eww_Font_Color/$opc3/g" ~/.config/eww/colors.scss
-    eww reload
+    if pgrep eww &> /dev/null; then
+      sed -i "s/$Get_Eww_Font_Color/$opc3/g" ~/.config/eww/colors.scss
+        eww reload
+    fi
 
-    # Polybar
-    sed -i "s/$Polybar_Font_Color/$opc3/g" ~/.config/polybar/config
+    # Bars
+    if pgrep polybar &> /dev/null; then
+      sed -i "s/$Polybar_Font_Color/$opc3/g" ~/.config/polybar/config
+      Restart_Bar &> /dev/null
+    elif pgrep tint2 &> /dev/null; then
+      sed -i "s/$Tint2_Font_Color/$opc3/g" ~/.config/tint2/tint2rc
+      Restart_Bar &> /dev/null
+    fi
 
     # Termite
     sed -i "s/$Termite_Fore/$opc3/g" ~/.config/termite/config
@@ -242,19 +287,14 @@ msg_erro="One or more colors are not correct.\nCheck the output above to identif
 
   else
     echo -e "$msg_erro"
-    exit 1
-  fi
-
-  sleep 5 &
-  Restart_Bar &> /dev/null &
-  
+  fi  
 }
 
 read -e opc
 
 
 case $opc in
-    y|Y) Change_Everything & 
+    y|Y) Change_Everything
          ;;
 
     n|N) echo "No changes will be made."
