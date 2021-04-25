@@ -15,7 +15,7 @@ So that it is possible to capture the background colors
 For the selected colors to be displayed on the terminal.  
 [Colr](https://pypi.org/project/Colr/)  
 
-**How to use**
+##How to use  
 
 At the moment this script works only in my settings,  
 because I did it for my own use, to make things easier for me.  
@@ -38,7 +38,7 @@ and have specified above so,
 nothing prevents using polybar ao instead of tint2,  
 the script is able to recognize the bar being used and modify only it.  
 
-**Procedures.**  
+## Procedures.  
 
 Usage is quite simple as shown in the GIF above.  
 You must first install the window manager you want,  
@@ -50,20 +50,20 @@ make a backup of its settings, in case you want to use it in the future.
 2. Run the small "install.sh" script contained within the script folder.  
 3. Restart your window manager.  
 
-**Using the script.**  
+## Using the script.  
 
 First, in a terminal, you must navigate to where the script is located.  
 Run the **sh magic** command,  
 and follow the steps, always paying attention to what is written.
 
-**Phases**
+## Phases
 
 1. Say whether you want the script to capture the colors of the current background.  
 2. Tell the script how many colors it should capture.  
 3. Choose if you would like to save the captured colors in a file located in your home,  
 with the name "colors.txt"
 
-**All steps can be skipped by answering "n" (No), or by pressing (Enter) in step number one.**
+## All steps can be skipped by answering "n" (No), or by pressing (Enter) in step number one.
 
 4. Choose the colors that will be used as the base "Background" of the theme.  
 5. Choose the color that will be used as the highlight in the theme.  
@@ -75,7 +75,7 @@ Compare them and answer "y" (Yes) to apply the changes.
 Read carefully the possible warnings that the script can give,  
 and in no way use similar colors, as this can cause problems.  
 
-***Something went wrong.***  
+## Something went wrong.
 
 There is a possibility that something goes wrong,  
 due to a script failure or human speech. If this happens don't worry,  
