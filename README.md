@@ -13,6 +13,24 @@ So that it is possible to capture the background colors
 
 * python-colr  
 For the selected colors to be displayed on the terminal.  
-[Colr](https://pypi.org/project/Colr/)
+[Colr](https://pypi.org/project/Colr/)  
+
+**How to use**
+
+At the moment this script works only in my settings,  
+because I did it for my own use, to make things easier for me.  
+It works well on.  
+
+* Xmonad + Polybar
+These are my xmonad configurations with polybar.  
+[Dotfiles Xmonad](https://github.com/Paladin1991/dotfiles.xmonad)
+
+* Fvwm + Tint2
+These are my settings for Fvwm with Tint2.  
+[Dotfiles Fvwm](https://github.com/Paladin1991/dotfiles.fvwm)  
+
+* Herbstluftwm + Tint2
+These are my settings for Herbstluftwm with Tint2.  
+[Dotfiles Herbstluftwm](https://github.com/Paladin1991/dotifiles.herbstluftwm)
 
 
