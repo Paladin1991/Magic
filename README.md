@@ -5,7 +5,7 @@ A shell script capable of altering aspects of the window manager, in the visual 
 
 ### Dependencies
 
-***imagemagik***
+***imagemagik***  
 ***python-colr***
 
 
