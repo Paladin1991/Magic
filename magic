@@ -74,8 +74,8 @@ Image=$(cat ~/.fehbg | sed -n 2p | cut -d "'" -f2)
 Colors=$(convert $Image -format %c -colorspace LAB -colors $color histogram:info:- | sort -n -r | awk '{print $3}' | cut -c -7)
 Image_Name=$(cat ~/.fehbg | sed 's/.*\///g' | sed -n 2p)
 echo -e "${f1}--------------------------------------------------$t"
-echo -e "${f1}:: ${t}${f2}Ready! The image was separated into ${f1}$color$t ${f2}colors$t"
-echo -e "${f1}:: ${t}${f2}Would you like to save the color scheme?$t (${f2}y$t/${f1}n$t)"
+echo -e "${f1}:: ${t}Ready! The image was separated into ${f1}$color$t colors$t"
+echo -e "${f1}:: ${t}Would you like to save the color scheme?$t (${f2}y$t/${f1}n$t)"
 echo -e "${f1}-> \c$t"
 
 read -e yes_no
@@ -111,21 +111,21 @@ read -e rep
 echo -e "${f1}------------$t"
 echo -e "Step ${f2}1 ${t}of ${f6}3$t"
 echo -e "${f1}------------$t"
-echo -e "Select the color to be used as the base of the theme."
+echo -e "Select the color to be used as the ${f1}base$t of the theme."
 echo -e "${f1}-> \c$t\n"
 read -e -p "${t}Base Color${f1} = " opc1
 
 echo -e "${f1}------------$t"
 echo -e "${t}Step ${f2}2 ${t}of ${f6}3$t"
 echo -e "${f1}------------$t"
-echo -e "Section the color that will serve as the highlight"
+echo -e "Section the color that will serve as the ${f1}highlight$t"
 echo -e "${f1}-> \c$t\n"
 read -e -p "${t}Highlight Color${f1} = " opc2
 
 echo -e "${f1}------------$t"
 echo -e "${t}Step ${f2}3 ${t}of ${f6}3$t"
 echo -e "${f1}------------$t"
-echo -e "Select the color that will be applied to text."
+echo -e "Select the color that will be applied to ${f1}text${t}."
 echo -e "${f1}-> \c$t\n"
 read -e -p "${t}Text Color${f1} = " opc3
 
@@ -217,6 +217,8 @@ get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
       sed -i "s/$Tint2_Background/$opc1/g" ~/.config/tint2/tint2rc
         Restart_Bar &> /dev/null
           echo "$ok Tint2"
+    else
+      echo " "
     fi
 
     # Eww
