@@ -91,8 +91,7 @@ you can fix it manually in the configuration scripts.
 ## Bugs
 
 [] For no apparent reason, the program uses only one color in all instances,  
-often decaying the background  
-colors of the same color as the text.
+often leaving the background colors the same color as the text.
 
 
 
