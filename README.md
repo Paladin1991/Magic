@@ -5,7 +5,12 @@ A shell script capable of altering aspects of the window manager, in the visual 
 
 ### Dependencies
 
-***imagemagick***  
-***python-colr***
+**Few dependencies are necessary for the operation of this script**
+
+* imagemagick
+So that it is possible to capture the background colors
+
+For the selected colors to be displayed on the terminal.
+* python-colr
 
 
