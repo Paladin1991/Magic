@@ -8,9 +8,11 @@ A shell script capable of altering aspects of the window manager, in the visual 
 **Few dependencies are necessary for the operation of this script**
 
 * imagemagick  
-So that it is possible to capture the background colors
+So that it is possible to capture the background colors  
+[ImageMagick](https://imagemagick.org/script/index.php)
 
 * python-colr  
-For the selected colors to be displayed on the terminal.
+For the selected colors to be displayed on the terminal.  
+[Colr](https://pypi.org/project/Colr/)
 
 
