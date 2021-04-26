@@ -57,9 +57,14 @@ Termite_Fore=$(cat ~/.config/termite/config | grep foreground | awk '{print $3}'
 Termite_Fore_Bold=$(cat ~/.config/termite/config | grep foreground_bold | awk '{print $3}')
 
 # Get WM's Colors
+# Fvwm
 Fvwm_Color=$(cat ~/.fvwm/Config/COLORS | grep Tint | awk '{print $2}')
+# Hbwm
 Hbwm_Color=$(cat ~/.config/herbstluftwm/autostart | grep colour_normal | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
 Hbwm_Iner=$(cat ~/.config/herbstluftwm/autostart | grep inner_acive | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
+# I3
+I3_Color=$(cat ~/.config/i3/config | grep "base" | sed -n 1p | awk '{print $3}')
+I3_Highlight=$(cat ~/.config/i3/config | grep "highlight" | sed -n 1p | awk '{print $3}')
 
 # Functions get wallpaper colors
 
@@ -172,6 +177,7 @@ Restart_Bar(){
     polybar -c ~/.config/polybar/config bar1 &
     polybar -c ~/.config/polybar/config bar2 &
     polybar -c ~/.config/polybar/config bar3 &
+    polybar -r example &
   elif pgrep tint2 &> /dev/null; then
     killall -q tint2
     tint2 &
@@ -197,6 +203,9 @@ get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
     elif [[ $get_wm == herbstluftwm ]]; then
       sed -i "s/$Hbwm_Color/$opc1/g" ~/.config/herbstluftwm/autostart
       echo "$ok Herbstluftwm"
+    elif [[ $get_wm == i3 ]]; then
+      sed -i "s/$I3_Color/$opc1/g" ~/.config/i3/config
+      echo "$ok I3-Gaps"
     fi
 
     #Terminais
@@ -239,9 +248,11 @@ get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
     
     # WM's
     # Herbstluftwm
-
     if [[ $get_wm == herbstluftwm ]]; then
       sed -i "s/$Hbwm_Iner/$opc2/g" ~/.config/herbstluftwm/autostart
+    # I3
+    elif [[ $get_wm == i3 ]]; then
+      sed -i "s/$I3_Highlight/$opc2/g" ~/.config/i3/config
     fi
 
     # Gtk Theme
