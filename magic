@@ -65,6 +65,9 @@ Hbwm_Iner=$(cat ~/.config/herbstluftwm/autostart | grep inner_acive | sed -n 1p 
 # I3
 I3_Color=$(cat ~/.config/i3/config | grep "base" | sed -n 1p | awk '{print $3}')
 I3_Highlight=$(cat ~/.config/i3/config | grep "highlight" | sed -n 1p | awk '{print $3}')
+# Qtile
+Qtile_Color=$(cat ~/.config/qtile/config.py | grep normal | sed -n 1p | awk '{print $3}' | sed "s/'//g")
+Qtile_Highlight=$(cat ~/.config/qtile/config.py | grep highlight | sed -n 1p | awk '{print $3}' | sed "s/'//g")
 
 # Functions get wallpaper colors
 
@@ -203,9 +206,14 @@ get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
     elif [[ $get_wm == herbstluftwm ]]; then
       sed -i "s/$Hbwm_Color/$opc1/g" ~/.config/herbstluftwm/autostart
       echo "$ok Herbstluftwm"
+    # i3-gaps
     elif [[ $get_wm == i3 ]]; then
       sed -i "s/$I3_Color/$opc1/g" ~/.config/i3/config
       echo "$ok I3-Gaps"
+    # Qtile
+    elif [[ $get_wm == LG3D ]]; then
+      sed -i "s/$Qtile_Color/$opc1/" ~/.config/qtile/config.py
+      echo "$ok Qtile"
     fi
 
     #Terminais
@@ -253,6 +261,9 @@ get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
     # I3
     elif [[ $get_wm == i3 ]]; then
       sed -i "s/$I3_Highlight/$opc2/g" ~/.config/i3/config
+    # Qtile
+    elif [[ $get_wm == LG3D ]]; then
+      sed -i "s/$Qtile_Highlight/$opc2/" ~/.config/qtile/config.py
     fi
 
     # Gtk Theme
@@ -307,7 +318,7 @@ read -e opc
 
 
 case $opc in
-    y|Y) Change_Everything
+    *y|Y|yes|Yes*) Change_Everything
          ;;
 
     n|N) echo "No changes will be made."
