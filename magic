@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Colors variables
 
@@ -12,6 +12,47 @@ d=$'\e[1m'
 t=$'\e[0m'
 v=$'\e[7m'
 p=$'\e[5m'
+
+# Capture system colors
+
+# Get gtk colors
+Gtk_Base=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep base)
+Gtk_Highlight=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep highlight)
+Gtk_Font=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep font)
+
+# Get eww colors
+Eww_Base=$(cat ~/.config/eww/colors.scss | grep base | sed 's/[$]//g')
+Eww_Highlight=$(cat ~/.config/eww/colors.scss | grep highlight | sed 's/[$]//g')
+Eww_Font=$(cat ~/.config/eww/colors.scss | grep font | sed 's/[$]//g')
+
+# Get Termite Colors
+Termite_Base=$(cat ~/.config/termite/config | grep background)
+Termite_Fore=$(cat ~/.config/termite/config | grep foreground | sed -n 1p)
+Termite_Fore_Bold=$(cat ~/.config/termite/config | grep foreground_bold)
+
+# Polybar
+Polybar_Base=$(cat ~/.config/polybar/config | grep background | sed -n 1p)
+Polybar_Highlight=$(cat ~/.config/polybar/config | grep highlight | sed -n 1p)
+Polybar_Font=$(cat ~/.config/polybar/config | grep foreground | sed -n 1p)
+
+# Get Tint2 Colors
+Tint2_Base=$(cat ~/.config/tint2/tint2rc | grep background_color | sed -n 1p | awk '{print $3}')
+Tint2_Font=$(cat ~/.config/tint2/tint2rc | grep clock_font_color | sed -n 1p | awk '{print $3}')
+
+# Qtile
+Qtile_Base=$(cat ~/.config/qtile/config.py | grep normal | sed -n 1p | awk '{print $3}' | sed "s/'//g")
+Qtile_Highlight=$(cat ~/.config/qtile/config.py | grep highlight | sed -n 1p | awk '{print $3}' | sed "s/'//g")
+
+# I3
+I3_Base=$(cat ~/.config/i3/config | grep "base" | sed -n 1p | awk '{print $3}')
+I3_Highlight=$(cat ~/.config/i3/config | grep "highlight" | sed -n 1p | awk '{print $3}')
+
+# Hbwm
+Hbwm_Base=$(cat ~/.config/herbstluftwm/autostart | grep colour_normal | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
+Hbwm_Highlight=$(cat ~/.config/herbstluftwm/autostart | grep inner_acive | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
+
+# Fvwm
+Fvwm_Color=$(cat ~/.fvwm/Config/COLORS | grep Tint | awk '{print $2}')
 
 # Layout
 
@@ -30,53 +71,14 @@ cat << EOF
 
 EOF
 
-# Variables
-
-# Get colors theme
-Get_Theme_Color=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep color-theme | awk '{print $3}' | sed 's/;//g')
-Get_Theme_Destac_Color=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep color-font | awk '{print $3}' | sed 's/;//g')
-Get_Theme_Text_Color=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep normal-font | awk '{print $3}' | sed 's/;//g')
-
-# Get eww colors
-Get_Eww_Color=$(cat ~/.config/eww/colors.scss | grep base-color | awk '{print $2}' | sed 's/;//g')
-Get_Eww_Destac_Color=$(cat ~/.config/eww/colors.scss | grep destac-color | awk '{print $2}' | sed 's/;//g')
-Get_Eww_Font_Color=$(cat ~/.config/eww/colors.scss | grep font-color | awk '{print $2}' | sed 's/;//g')
-
-# Get Bars Colors
-# Polybar
-Polybar_Color=$(cat ~/.config/polybar/config | grep background | sed -n 1p | awk '{print $3}')
-Polybar_Destac_Color=$(cat ~/.config/polybar/config | grep background-alt | sed -n 1p | awk '{print $3}')
-Polybar_Font_Color=$(cat ~/.config/polybar/config | grep foreground | sed -n 1p | awk '{print $3}')
-# Get Tint2 Colors
-Tint2_Background=$(cat ~/.config/tint2/tint2rc | grep background_color | sed -n 1p | awk '{print $3}')
-Tint2_Font_Color=$(cat ~/.config/tint2/tint2rc | grep clock_font_color | sed -n 1p | awk '{print $3}')
-
-# Get Termite Colors
-Termite_Back_Color=$(cat ~/.config/termite/config | grep background | awk '{print $3}')
-Termite_Fore=$(cat ~/.config/termite/config | grep foreground | awk '{print $3}' | sed -n 1p)
-Termite_Fore_Bold=$(cat ~/.config/termite/config | grep foreground_bold | awk '{print $3}')
-
-# Get WM's Colors
-# Fvwm
-Fvwm_Color=$(cat ~/.fvwm/Config/COLORS | grep Tint | awk '{print $2}')
-# Hbwm
-Hbwm_Color=$(cat ~/.config/herbstluftwm/autostart | grep colour_normal | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
-Hbwm_Iner=$(cat ~/.config/herbstluftwm/autostart | grep inner_acive | sed -n 1p | cut -d "=" -f2 | sed "s/'//g")
-# I3
-I3_Color=$(cat ~/.config/i3/config | grep "base" | sed -n 1p | awk '{print $3}')
-I3_Highlight=$(cat ~/.config/i3/config | grep "highlight" | sed -n 1p | awk '{print $3}')
-# Qtile
-Qtile_Color=$(cat ~/.config/qtile/config.py | grep normal | sed -n 1p | awk '{print $3}' | sed "s/'//g")
-Qtile_Highlight=$(cat ~/.config/qtile/config.py | grep highlight | sed -n 1p | awk '{print $3}' | sed "s/'//g")
-
-# Functions get wallpaper colors
-
+# Functions
+# Capture background colors and save to home
 Get_Wallpaper_Color(){
-
 echo -e "${f1}----------------------------------------$t"
 echo -e "${f2}::${t} How many colors should be displayed?"
 echo -e "${f1}-> \c$t"
 
+# Ask the number of colors to be captured
 read -e -p "${t}Number of colors${f1} = " color
 Image=$(cat ~/.fehbg | sed -n 2p | cut -d "'" -f2)
 Colors=$(convert $Image -format %c -colorspace LAB -colors $color histogram:info:- | sort -n -r | awk '{print $3}' | cut -c -7)
@@ -95,18 +97,16 @@ Image name: $Image_Name
 Total Colors: $color
 Date: '`date`'
 ====================================" >> ~/.color.txt
-echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.color.txt
-echo -e "${f1}----------------------------------------------------------$t"
-echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.colors.txt"
-echo -e "${f1}----------------------------------------------------------$t"
-echo " "
-      ;;
-    
-    *) echo "Option invalid, answer Yes or No"  ;;
+        echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.color.txt
+        echo -e "${f1}----------------------------------------------------------$t"
+        echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.colors.txt"
+        echo -e "${f1}----------------------------------------------------------$t"
+        echo " "
   esac
 }
 
-# Option 0. Use wallpaper
+# Asks if you would like to capture the background colors
+Confirm_Capture(){
 echo -e "${f2}::${t} Capture the colors of the wallpaper? ${f2}y$t/${f1}n$t"
 echo -e "${f1}-> \c$t"
 read -e rep
@@ -114,22 +114,25 @@ read -e rep
   if [[ $rep = y ]]; then
     Get_Wallpaper_Color
   fi
+}
 
-# Option 1. Select theme color
+#Receives the colors that will be used to make the modifications
+Enter_The_Color(){
+# Receives the colors used as a base
 echo -e "${f1}------------$t"
 echo -e "Step ${f2}1 ${t}of ${f6}3$t"
 echo -e "${f1}------------$t"
 echo -e "Select the color to be used as the ${f1}base$t of the theme."
 echo -e "${f1}-> \c$t\n"
 read -e -p "${t}Base Color${f1} = " opc1
-
+# Receive the colors used as highlights
 echo -e "${f1}------------$t"
 echo -e "${t}Step ${f2}2 ${t}of ${f6}3$t"
 echo -e "${f1}------------$t"
 echo -e "Section the color that will serve as the ${f1}highlight$t"
 echo -e "${f1}-> \c$t\n"
 read -e -p "${t}Highlight Color${f1} = " opc2
-
+# Receives the colors used in the fonts
 echo -e "${f1}------------$t"
 echo -e "${t}Step ${f2}3 ${t}of ${f6}3$t"
 echo -e "${f1}------------$t"
@@ -137,23 +140,30 @@ echo -e "Select the color that will be applied to ${f1}text${t}."
 echo -e "${f1}-> \c$t\n"
 read -e -p "${t}Text Color${f1} = " opc3
 
+# Confirms that the color value is correct
 op1=$(echo "$opc1" | wc -c)
 op2=$(echo "$opc2" | wc -c)
 op3=$(echo "$opc3" | wc -c)
-
+# Confirmation symbols
 ok="[${f2} ${t}]"
 erro="[${f1} ${t}]"
-
+# Filters the current colors to hexadecimal values
+color1=$(echo "$Gtk_Base" | awk '{print $3}' | sed 's/;//g')
+color2=$(echo "$Gtk_Highlight" | awk '{print $3}' | sed 's/;//g')
+color3=$(echo "$Gtk_Font" | awk '{print $3}' | sed 's/;//g')
+# Displays the colors used in the current theme
 clear
 echo "${t}These are the current colors."
 echo -e "${f1}==============================$t"
-echo -e "Base                 `colr " " -b "$Get_Theme_Color"` $Get_Theme_Color"
-echo -e "Highlight            `colr " " -b "$Get_Theme_Destac_Color"` $Get_Theme_Destac_Color"
-echo -e "Fonts                `colr " " -b "$Get_Theme_Text_Color"` $Get_Theme_Text_Color"
+echo -e "Base                 `colr " " -b "$color1"` $color1"
+echo -e "Highlight            `colr " " -b "$color2"` $color2"
+echo -e "Fonts                `colr " " -b "$color3"` $color3"
 echo -e "${f1}==============================$t"
 echo  " "
 echo "${t}These will be the colors used"
 echo -e "${f1}==============================$t"
+# If the color value was correct, the symbol that represents "correct" 
+# will be displayed, otherwise the error symbol.
 if [[ $op1 -eq 8 ]]; then
   echo "$ok Base            `colr " " -b " $opc1 "` $opc1"
 else
@@ -170,158 +180,131 @@ else
   echo "$erro Fonts           $opc3"
 fi
 echo -e "${f1}==============================$t"
+# A warning not to use the same colors, to avoid mistakes.
 echo -e "${f1}ATTENTION!$t Do not use identical colors, this can cause problems."
 echo "Would you like to proceed with the changes? ${f2}y$t/${f1}n$t"
 echo -e "${f1}-> \c$t\n"
-
-Restart_Bar(){
-  if pgrep polybar &> /dev/null; then
-    killall -q polybar
-    polybar -c ~/.config/polybar/config bar1 &
-    polybar -c ~/.config/polybar/config bar2 &
-    polybar -c ~/.config/polybar/config bar3 &
-    polybar -r example &
-  elif pgrep tint2 &> /dev/null; then
-    killall -q tint2
-    tint2 &
-  fi
 }
 
-Change_Everything(){
-
-msg_erro="One or more colors are not correct.\nCheck the output above to identify the error!"
+# Recognizes the window manager
 get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
 
-# Base Colors
-  if [[ $op1 -eq 8 ]]; then
-    echo  " "
-    echo -e "${f1}=============================$t"
-
-    # WM's
-    #Fvwm
-    if [[ $get_wm == FVWM ]]; then
-      sed -i "s/$Fvwm_Color/$opc1/g" ~/.fvwm/Config/COLORS
-      echo "$ok Fvwm"
-    # Herbstluftwm
-    elif [[ $get_wm == herbstluftwm ]]; then
-      sed -i "s/$Hbwm_Color/$opc1/g" ~/.config/herbstluftwm/autostart
-      echo "$ok Herbstluftwm"
-    # i3-gaps
-    elif [[ $get_wm == i3 ]]; then
-      sed -i "s/$I3_Color/$opc1/g" ~/.config/i3/config
-      echo "$ok I3-Gaps"
-    # Qtile
-    elif [[ $get_wm == LG3D ]]; then
-      sed -i "s/$Qtile_Color/$opc1/" ~/.config/qtile/config.py
-      echo "$ok Qtile"
-    fi
-
-    #Terminais
-    # Termite
-    sed -i "s/$Termite_Back_Color/$opc1/g" ~/.config/termite/config
-    echo "$ok Terminal"
-
-    # Gtk theme
-    sed -i "s/$Get_Theme_Color/$opc1/g" ~/.themes/Midnight/gtk-3.0/colors.css
-    echo "$ok Gtk Theme"
-
-    # Bars
-    if pgrep polybar &> /dev/null; then
-      sed -i "s/$Polybar_Color/$opc1/g" ~/.config/polybar/config
-        Restart_Bar &> /dev/null
-          echo "$ok Polybar"
-    elif pgrep tint2 &> /dev/null; then
-      sed -i "s/$Tint2_Background/$opc1/g" ~/.config/tint2/tint2rc
-        Restart_Bar &> /dev/null
-          echo "$ok Tint2"
+Change_Base(){
+        
+    if [[ $op1 -eq 8 ]]; then   
+            # Gtk base
+            sed -i "s/$Gtk_Base.*/@define-color base $opc1;/g" ~/.themes/Midnight/gtk-3.0/colors.css 
+            # Eww base
+            sed -i "s/$Eww_Base.*/base: $opc1;/g" ~/.config/eww/colors.scss
+            # Termite base
+            sed -i "s/$Termite_Base.*/background = $opc1/g" ~/.config/termite/config
+            # Qtile
+            if [[ $get_wm == LG3D ]]; then
+                sed -i "s/$Qtile_Base/$opc1/" ~/.config/qtile/config.py
+            # i3-gaps
+            elif [[ $get_wm == i3 ]]; then
+                sed -i "s/$I3_Base/$opc1/g" ~/.config/i3/config
+                i3-msg restart &> /dev/null
+            # Herbstluftwm
+            elif [[ $get_wm == herbstluftwm ]]; then
+              sed -i "s/$Hbwm_Base/$opc1/g" ~/.config/herbstluftwm/autostart
+              herbstclient reload
+            # Fvwm
+            elif [[ $get_wm == FVWM ]]; then
+              sed -i "s/$Fvwm_Color/$opc1/g" ~/.fvwm/Config/COLORS
+            fi
+            # Polybar
+            if pgrep polybar &> /dev/null; then
+              sed -i "s/$Polybar_Base.*/background = $opc1/g" ~/.config/polybar/config
+            # Tint2
+            elif pgrep tint2 &> /dev/null; then
+              sed -i "s/$Tint2_Base/$opc1/g" ~/.config/tint2/tint2rc
+              killall -q tint2
+              tint2 &> /dev/null &
+            fi
     else
-      echo " "
+        echo -e "Base error."
     fi
-
-    # Eww
-    if pgrep eww &> /dev/null; then
-      sed -i "s/$Get_Eww_Color/$opc1/g" ~/.config/eww/colors.scss
-        eww reload
-          echo "$ok Eww"
-    fi
-
-    echo -e "${f1}=============================$t"
-    echo -e "If any of the changes have not been applied,\nplease log in again, or restart your window manager."
-  else
-    echo -e "$msg_erro"
-  fi
-
-# Highlight
-  if [[ $op2 -eq 8 ]]; then
-    
-    # WM's
-    # Herbstluftwm
-    if [[ $get_wm == herbstluftwm ]]; then
-      sed -i "s/$Hbwm_Iner/$opc2/g" ~/.config/herbstluftwm/autostart
-    # I3
-    elif [[ $get_wm == i3 ]]; then
-      sed -i "s/$I3_Highlight/$opc2/g" ~/.config/i3/config
-    # Qtile
-    elif [[ $get_wm == LG3D ]]; then
-      sed -i "s/$Qtile_Highlight/$opc2/" ~/.config/qtile/config.py
-    fi
-
-    # Gtk Theme
-    sed -i "s/$Get_Theme_Destac_Color/$opc2/g" ~/.themes/Midnight/gtk-3.0/colors.css
-
-    # Polybar
-    if pgrep polybar &> /dev/null; then
-      sed -i "s/$Polybar_Destac_Color/$opc2/g" ~/.config/polybar/config
-    fi
-
-    # Eww
-    if pgrep eww &> /dev/null; then
-      sed -i "s/$Get_Eww_Destac_Color/$opc2/g" ~/.config/eww/colors.scss
-        eww reload
-    fi
-
-  else
-    echo -e "$msg_erro"
-  fi
-
-# Font 
-  if [[ $op3 -eq 8 ]]; then
-
-    # Gtk Theme
-    sed -i "s/$Get_Theme_Text_Color/$opc3/g" ~/.themes/Midnight/gtk-3.0/colors.css
-
-    # Eww
-    if pgrep eww &> /dev/null; then
-      sed -i "s/$Get_Eww_Font_Color/$opc3/g" ~/.config/eww/colors.scss
-        eww reload
-    fi
-
-    # Bars
-    if pgrep polybar &> /dev/null; then
-      sed -i "s/$Polybar_Font_Color/$opc3/g" ~/.config/polybar/config
-      Restart_Bar &> /dev/null
-    elif pgrep tint2 &> /dev/null; then
-      sed -i "s/$Tint2_Font_Color/$opc3/g" ~/.config/tint2/tint2rc
-      Restart_Bar &> /dev/null
-    fi
-
-    # Termite
-    sed -i "s/$Termite_Fore/$opc3/g" ~/.config/termite/config
-    sed -i "s/$Termite_Fore_Bold/$opc3´/g" ~/.config/termite/config
-
-  else
-    echo -e "$msg_erro"
-  fi  
 }
 
-read -e opc
+Change_Highlight(){
 
+    if [[ $op2 -eq 8 ]]; then
+        # Gtk highlight
+        sed -i "s/$Gtk_Highlight.*/@define-color highlight $opc2;/g" ~/.themes/Midnight/gtk-3.0/colors.css
+        # Eww highlight
+        sed -i "s/$Eww_Highlight.*/highlight: $opc2;/g" ~/.config/eww/colors.scss
+        # Qtile
+        if [[ $get_wm == LG3D ]]; then
+            sed -i "s/$Qtile_Highlight/$opc2/" ~/.config/qtile/config.py
+        elif [[ $get_wm == i3 ]]; then
+            sed -i "s/$I3_Highlight/$opc2/g" ~/.config/i3/config
+            i3-msg restart &> /dev/null 
+        # Herbstluftwm
+        elif [[ $get_wm == herbstluftwm ]]; then
+            sed -i "s/$Hbwm_Highlight/$opc2/g" ~/.config/herbstluftwm/autostart
+            herbstclient reload           
+        fi
+        # Polybar
+        if pgrep polybar &> /dev/null; then
+          sed -i "s/$Polybar_Highlight.*/highlight = $opc2/g" ~/.config/polybar/config
+        fi
+    else
+        echo -e "Highlight error."
+    fi
 
-case $opc in
-    *y|Y|yes|Yes*) Change_Everything
-         ;;
+}
 
-    n|N) echo "No changes will be made."
-         sleep 3 
-         clear
-esac
+Change_Font(){
+    if [[ $op3 -eq 8 ]]; then
+        # Gtk font
+        sed -i "s/$Gtk_Font.*/@define-color font $opc3;/g" ~/.themes/Midnight/gtk-3.0/colors.css
+        # Eww font
+        sed -i "s/$Eww_Font.*/font: $opc3;/g" ~/.config/eww/colors.scss
+        # Termite fore
+        sed -i "s/$Termite_Fore.*/foreground = $opc3/g" ~/.config/termite/config
+        sed -i "s/$Termite_Fore_Bold.*/foreground_bold = $opc3/g" ~/.config/termite/config
+        # Polybar
+        if pgrep polybar &> /dev/null; then
+          sed -i "s/$Polybar_Font.*/foreground = $opc3/g" ~/.config/polybar/config
+        elif pgrep tint2 &> /dev/null; then
+          sed -i "s/$Tint2_Font/$opc3/g" ~/.config/tint2/tint2rc
+          killall -q tint2
+          tint2 &> /dev/null & 
+        fi
+    else
+        echo -e "Font error."
+    fi
+}
+
+Confirm_Capture
+Enter_The_Color 
+
+read confirm 
+
+Sum=$(echo $(( $op1 + $op2 + $op3)))
+
+    case $confirm in
+        *y|Y|yes|Yes*)
+        if [[ $Sum -eq 24 ]]; then
+            Change_Base
+            Change_Highlight
+            Change_Font
+
+            eww reload
+            echo  " "
+            sleep 1
+            echo -e "${f1}=============================$t"
+            echo "$ok Base"
+            sleep 0.5
+            echo "$ok Highlight"
+            sleep 0.5
+            echo "$ok Font"
+            echo -e "${f1}=============================$t"
+            sleep 1
+            echo -e "\n"
+        else
+            echo "Something went wrong. Make sure the colors are correct."
+        fi
+           ;;
+    esac
