@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Vars
 # Colors variables
 
 f=3 b=4
@@ -13,7 +14,12 @@ t=$'\e[0m'
 v=$'\e[7m'
 p=$'\e[5m'
 
-# Capture system colors
+# Confirmation symbols
+ok="[${f2} ${t}]"
+erro="[${f1} ${t}]"
+
+# Recognizes the window manager
+get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
 
 # Get gtk colors
 Gtk_Base=$(cat ~/.themes/Midnight/gtk-3.0/colors.css | grep base)
@@ -29,6 +35,10 @@ Eww_Font=$(cat ~/.config/eww/colors.scss | grep font | sed 's/[$]//g')
 Termite_Base=$(cat ~/.config/termite/config | grep background)
 Termite_Fore=$(cat ~/.config/termite/config | grep foreground | sed -n 1p)
 Termite_Fore_Bold=$(cat ~/.config/termite/config | grep foreground_bold)
+
+# Get Urxvt Colors
+Urxvt_Base=$(cat ~/.Xresources | grep URxvt.background:)
+Urxvt_Fore=$(cat ~/.Xresources | grep URxvt.foreground:)
 
 # Polybar
 Polybar_Base=$(cat ~/.config/polybar/config | grep background | sed -n 1p)
@@ -54,11 +64,29 @@ Hbwm_Highlight=$(cat ~/.config/herbstluftwm/autostart | grep inner_acive | sed -
 # Fvwm
 Fvwm_Color=$(cat ~/.fvwm/Config/COLORS | grep Tint | awk '{print $2}')
 
-# Layout
+# Will display a message, giving a wrong command or with --help
+HELP(){
+  clear
+  cat << INT
 
-clear
+  Usage┐
+       ├━ $d${f1}--help${t}${d}:      Displays this message.
+       ├━ ${f1}--all${t}${d}:       Modify the entire theme.
+       ├━ ${f1}--base${t}${d}:      Modifies only the base of the theme.
+       ├━ ${f1}--highlight${t}${d}: Modify only the theme's accent colors.
+       ├━ ${f1}--font${t}${d}:      Changes only the font colors of the theme.
+       ├━ ${f1}--capture${t}${d}:   Just capture the background colors.
+       ├━ ${f1}--now${t}${d}:       Use one of the saved themes to modify everything at once.
+       └━ ${f1}--save${t}:      Save the theme information to a text file.
 
+INT
+}
+##################################################################
+
+# Program name displayed in all options
+BANNER(){
 cat << EOF
+  $d${f1}PowerBy$t Shell Script
   $f0▄▄ $f1▄▄ $f2▄▄ $f3▄▄ $f4▄▄ $f5▄▄ $f6▄▄ $f7▄▄
 
   ███╗░░░███╗░█████╗░░██████╗░██╗░█████╗░
@@ -68,127 +96,150 @@ cat << EOF
   ██║░╚═╝░██║██║░░██║╚██████╔╝██║╚█████╔╝
   ╚═╝░░░░░╚═╝╚═╝░░╚═╝░╚═════╝░╚═╝░╚════╝░
                   $f0▄▄ $f1▄▄ $f2▄▄ $f3▄▄ $f4▄▄ $f5▄▄ $f6▄▄ $f7▄▄
-
+                  Press $d${f1}Ctrl+c$t for exit.
+--------------------------------------------
 EOF
+}
+################################################
+# ▄▀█ █░░ █░░   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# █▀█ █▄▄ █▄▄   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+################################################
 
-# Functions
+# --All option. It will modify all aspects of the theme
+# As gtk theme, terminal bars and widgets
+ALL(){
+clear
+
+BANNER
+
 # Capture background colors and save to home
 Get_Wallpaper_Color(){
-echo -e "${f1}----------------------------------------$t"
-echo -e "${f2}::${t} How many colors should be displayed?"
-echo -e "${f1}-> \c$t"
+  echo -e "${f1}----------------------------------------$t"
+  echo -e "${f2}::${t} How many colors should be displayed?"
+  echo -e "${f1}-> \c$t"
 
 # Ask the number of colors to be captured
-read -e -p "${t}Number of colors${f1} = " color
+  read -e -p "${t}Number of colors${f1} = " color
+
+# Get current background
 Image=$(cat ~/.fehbg | sed -n 2p | cut -d "'" -f2)
 Colors=$(convert $Image -format %c -colorspace LAB -colors $color histogram:info:- | sort -n -r | awk '{print $3}' | cut -c -7)
 Image_Name=$(cat ~/.fehbg | sed 's/.*\///g' | sed -n 2p)
-echo -e "${f1}--------------------------------------------------$t"
-echo -e "${f1}:: ${t}Ready! The image was separated into ${f1}$color$t colors$t"
-echo -e "${f1}:: ${t}Would you like to save the color scheme?$t (${f2}y$t/${f1}n$t)"
-echo -e "${f1}-> \c$t"
+
+  echo -e "${f1}--------------------------------------------------$t"
+  echo -e "${f1}:: ${t}Ready! The image was separated into ${f1}$color$t colors$t"
+  echo -e "${f1}:: ${t}Would you like to save the color scheme?$t (${f2}y$t/${f1}n$t)"
+  echo -e "${f1}-> \c$t"
 
 read -e yes_no
 
-  case $yes_no in
+case $yes_no in
     
-    *y|Y|yes|Yes*) echo -e "====================================
+*y|Y|yes|Yes*)
+if find ~/.magic &> /dev/null ; then
+echo -e "====================================
 Image name: $Image_Name
 Total Colors: $color
 Date: '`date`'
-====================================" >> ~/.color.txt
-        echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.color.txt
+====================================" >> ~/.magic/.color.txt
+        echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.magic/.color.txt
         echo -e "${f1}----------------------------------------------------------$t"
-        echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.colors.txt"
+        echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.magic/.colors.txt"
         echo -e "${f1}----------------------------------------------------------$t"
         echo " "
-  esac
+else
+  mkdir ~/.magic
+echo -e "====================================
+Image name: $Image_Name
+Total Colors: $color
+Date: '`date`'
+====================================" >> ~/.magic/.color.txt
+        echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.magic/.color.txt
+        echo -e "${f1}----------------------------------------------------------------$t"
+        echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.magic/.colors.txt"
+        echo -e "${f1}----------------------------------------------------------------$t"
+        echo " "
+fi
+esac
 }
 
 # Asks if you would like to capture the background colors
 Confirm_Capture(){
-echo -e "${f2}::${t} Capture the colors of the wallpaper? ${f2}y$t/${f1}n$t"
-echo -e "${f1}-> \c$t"
-read -e rep
+  echo -e "${f2}::${t} Capture the colors of the wallpaper? ${f2}y$t/${f1}n$t"
+  echo -e "${f1}-> \c$t"
+  read -e rep
 
-  if [[ $rep = y ]]; then
-    Get_Wallpaper_Color
-  fi
+    if [[ $rep = y ]]; then
+      Get_Wallpaper_Color
+    fi
 }
 
 #Receives the colors that will be used to make the modifications
 Enter_The_Color(){
-# Receives the colors used as a base
-echo -e "${f1}------------$t"
-echo -e "Step ${f2}1 ${t}of ${f6}3$t"
-echo -e "${f1}------------$t"
-echo -e "Select the color to be used as the ${f1}base$t of the theme."
-echo -e "${f1}-> \c$t\n"
-read -e -p "${t}Base Color${f1} = " opc1
-# Receive the colors used as highlights
-echo -e "${f1}------------$t"
-echo -e "${t}Step ${f2}2 ${t}of ${f6}3$t"
-echo -e "${f1}------------$t"
-echo -e "Section the color that will serve as the ${f1}highlight$t"
-echo -e "${f1}-> \c$t\n"
-read -e -p "${t}Highlight Color${f1} = " opc2
-# Receives the colors used in the fonts
-echo -e "${f1}------------$t"
-echo -e "${t}Step ${f2}3 ${t}of ${f6}3$t"
-echo -e "${f1}------------$t"
-echo -e "Select the color that will be applied to ${f1}text${t}."
-echo -e "${f1}-> \c$t\n"
-read -e -p "${t}Text Color${f1} = " opc3
-
-# Confirms that the color value is correct
-op1=$(echo "$opc1" | wc -c)
-op2=$(echo "$opc2" | wc -c)
-op3=$(echo "$opc3" | wc -c)
-# Confirmation symbols
-ok="[${f2} ${t}]"
-erro="[${f1} ${t}]"
-# Filters the current colors to hexadecimal values
-color1=$(echo "$Gtk_Base" | awk '{print $3}' | sed 's/;//g')
-color2=$(echo "$Gtk_Highlight" | awk '{print $3}' | sed 's/;//g')
-color3=$(echo "$Gtk_Font" | awk '{print $3}' | sed 's/;//g')
-# Displays the colors used in the current theme
-clear
-echo "${t}These are the current colors."
-echo -e "${f1}==============================$t"
-echo -e "Base                 `colr " " -b "$color1"` $color1"
-echo -e "Highlight            `colr " " -b "$color2"` $color2"
-echo -e "Fonts                `colr " " -b "$color3"` $color3"
-echo -e "${f1}==============================$t"
-echo  " "
-echo "${t}These will be the colors used"
-echo -e "${f1}==============================$t"
-# If the color value was correct, the symbol that represents "correct" 
-# will be displayed, otherwise the error symbol.
-if [[ $op1 -eq 8 ]]; then
-  echo "$ok Base            `colr " " -b " $opc1 "` $opc1"
-else
-  echo "$erro Base            $opc1"
-fi
-if [[ $op2 -eq 8 ]]; then
-  echo "$ok Highlight       `colr " " -b " $opc2 "` $opc2"
-else
-  echo "$erro Highlight      $opc2"
-fi
-if [[ $op3 -eq 8 ]]; then
-  echo "$ok Fonts           `colr " " -b " $opc3 "` $opc3"
-else
-  echo "$erro Fonts           $opc3"
-fi
-echo -e "${f1}==============================$t"
-# A warning not to use the same colors, to avoid mistakes.
-echo -e "${f1}ATTENTION!$t Do not use identical colors, this can cause problems."
-echo "Would you like to proceed with the changes? ${f2}y$t/${f1}n$t"
-echo -e "${f1}-> \c$t\n"
+  # Receives the colors used as a base
+  echo -e "${f1}------------$t"
+  echo -e "Step ${f2}1 ${t}of ${f6}3$t"
+  echo -e "${f1}------------$t"
+  echo -e "Select the color to be used as the ${f1}base$t of the theme."
+  echo -e "${f1}-> \c$t\n"
+  read -e -p "${t}Base Color${f1} = " opc1
+  # Receive the colors used as highlights
+  echo -e "${f1}------------$t"
+  echo -e "${t}Step ${f2}2 ${t}of ${f6}3$t"
+  echo -e "${f1}------------$t"
+  echo -e "Section the color that will serve as the ${f1}highlight$t"
+  echo -e "${f1}-> \c$t\n"
+  read -e -p "${t}Highlight Color${f1} = " opc2
+  # Receives the colors used in the fonts
+  echo -e "${f1}------------$t"
+  echo -e "${t}Step ${f2}3 ${t}of ${f6}3$t"
+  echo -e "${f1}------------$t"
+  echo -e "Select the color that will be applied to ${f1}text${t}."
+  echo -e "${f1}-> \c$t\n"
+  read -e -p "${t}Text Color${f1} = " opc3
+  # Confirms that the color value is correct
+  op1=$(echo "$opc1" | wc -c)
+  op2=$(echo "$opc2" | wc -c)
+  op3=$(echo "$opc3" | wc -c)
+  # Filters the current colors to hexadecimal values
+  color1=$(echo "$Gtk_Base" | awk '{print $3}' | sed 's/;//g')
+  color2=$(echo "$Gtk_Highlight" | awk '{print $3}' | sed 's/;//g')
+  color3=$(echo "$Gtk_Font" | awk '{print $3}' | sed 's/;//g')
+  # Displays the colors used in the current theme
+  clear
+  echo "${t}These are the current colors."
+  echo -e "${f1}==============================$t"
+  echo -e "Base                 `colr " " -b "$color1"` $color1"
+  echo -e "Highlight            `colr " " -b "$color2"` $color2"
+  echo -e "Fonts                `colr " " -b "$color3"` $color3"
+  echo -e "${f1}==============================$t"
+  echo  " "
+  echo "${t}These will be the colors used"
+  echo -e "${f1}==============================$t"
+  # If the color value was correct, the symbol that represents "correct" 
+  # will be displayed, otherwise the error symbol.
+    if [[ $op1 -eq 8 ]]; then
+      echo "$ok Base            `colr " " -b " $opc1 "` $opc1"
+    else
+      echo "$erro Base            $opc1"
+    fi
+    if [[ $op2 -eq 8 ]]; then
+      echo "$ok Highlight       `colr " " -b " $opc2 "` $opc2"
+    else
+      echo "$erro Highlight      $opc2"
+    fi
+    if [[ $op3 -eq 8 ]]; then
+      echo "$ok Fonts           `colr " " -b " $opc3 "` $opc3"
+    else
+      echo "$erro Fonts           $opc3"
+    fi
+  echo -e "${f1}==============================$t"
+  # A warning not to use the same colors, to avoid mistakes.
+  echo -e "${f1}ATTENTION!$t Do not use identical colors, this can cause problems."
+  echo "Would you like to proceed with the changes? ${f2}y$t/${f1}n$t"
+  echo -e "${f1}-> \c$t\n"
 }
-
-# Recognizes the window manager
-get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
-
+# Function that changes the base color of the theme, is part of the "--all" function
 Change_Base(){
         
     if [[ $op1 -eq 8 ]]; then   
@@ -198,6 +249,9 @@ Change_Base(){
             sed -i "s/$Eww_Base.*/base: $opc1;/g" ~/.config/eww/colors.scss
             # Termite base
             sed -i "s/$Termite_Base.*/background = $opc1/g" ~/.config/termite/config
+            # Urxvt base
+            sed -i "s/$Urxvt_Base.*/URxvt.background: $opc1/g" ~/.Xresources
+            xrdb ~/.Xresources
             # Qtile
             if [[ $get_wm == LG3D ]]; then
                 sed -i "s/$Qtile_Base/$opc1/" ~/.config/qtile/config.py
@@ -226,7 +280,7 @@ Change_Base(){
         echo -e "Base error."
     fi
 }
-
+# Function that changes the accent color of the theme, is part of the "--all" function
 Change_Highlight(){
 
     if [[ $op2 -eq 8 ]]; then
@@ -254,7 +308,7 @@ Change_Highlight(){
     fi
 
 }
-
+# Function that changes the color of the theme fonts, is part of the "--all" function
 Change_Font(){
     if [[ $op3 -eq 8 ]]; then
         # Gtk font
@@ -264,6 +318,8 @@ Change_Font(){
         # Termite fore
         sed -i "s/$Termite_Fore.*/foreground = $opc3/g" ~/.config/termite/config
         sed -i "s/$Termite_Fore_Bold.*/foreground_bold = $opc3/g" ~/.config/termite/config
+        # Urxvt
+        sed -i "s/$Urxvt_Fore.*/URxvt.foreground: $opc3/g" ~/.Xresources
         # Polybar
         if pgrep polybar &> /dev/null; then
           sed -i "s/$Polybar_Font.*/foreground = $opc3/g" ~/.config/polybar/config
@@ -277,11 +333,16 @@ Change_Font(){
     fi
 }
 
+# Calls the function according to the capture of the "--all" function
 Confirm_Capture
+# Call the function enter the color of the "--all" function
 Enter_The_Color 
 
 read confirm 
 
+# It makes the sums of the entries given in the previous stages.
+# If the sum is not equal to 24, the program will not be executed, 
+# avoiding several errors.
 Sum=$(echo $(( $op1 + $op2 + $op3)))
 
     case $confirm in
@@ -290,21 +351,498 @@ Sum=$(echo $(( $op1 + $op2 + $op3)))
             Change_Base
             Change_Highlight
             Change_Font
-
             eww reload
             echo  " "
-            sleep 1
-            echo -e "${f1}=============================$t"
-            echo "$ok Base"
             sleep 0.5
-            echo "$ok Highlight"
+            echo -e "${f2}If any aspect has not been changed,"
+            echo "please restart your window manager$t"
+            echo " "
+            echo -e "Base\c "; sleep 0.5; echo "      $ok modified"
             sleep 0.5
-            echo "$ok Font"
-            echo -e "${f1}=============================$t"
-            sleep 1
-            echo -e "\n"
+            echo -e "Highlight\c "; sleep 0.5; echo " $ok modified"
+            sleep 0.5
+            echo -e "Font\c "; sleep 0.5; echo "      $ok modified"
+            sleep 0.5
+            echo " "
         else
             echo "Something went wrong. Make sure the colors are correct."
         fi
            ;;
     esac
+}
+
+###################################################
+# █▄▄ ▄▀█ █▀ █▀▀   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# █▄█ █▀█ ▄█ ██▄   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+###################################################
+# It will only change the base colors of the system.
+BASE(){
+clear
+
+BANNER
+
+# Receives the colors used as a base
+  echo -e "Indicate the color of ${f1}BASE$t"
+  echo -e "$d${f1}-> \c$t\n"
+  read -e -p "${t}Base Color${f1}$d$t = " opc1
+
+# Confirms that the color value is correct
+  op1=$(echo "$opc1" | wc -c)
+  
+# Filters the current colors to hexadecimal values
+  echo ""
+  echo -e "--------------------------------"
+  echo "$d${f4}This is the current base color.$t"
+  echo -e "Base                 `colr " " -b "$color1"` $color1"
+  echo -e "--------------------------------"
+  echo "$d${f5}This is the new color.$t"
+  echo -e "Base                 `colr " " -b "$opc1"` $opc1"
+  echo -e "--------------------------------"
+  echo " "
+  echo -e "Apply change? $d${f2}y$t/$d${f1}n$t $d${f1}->$t \c"
+
+  read base_color
+
+Change_Base(){
+        
+    if [[ $op1 -eq 8 ]]; then   
+            # Gtk base
+            sed -i "s/$Gtk_Base.*/@define-color base $opc1;/g" ~/.themes/Midnight/gtk-3.0/colors.css 
+            # Eww base
+            sed -i "s/$Eww_Base.*/base: $opc1;/g" ~/.config/eww/colors.scss
+            # Termite base
+            sed -i "s/$Termite_Base.*/background = $opc1/g" ~/.config/termite/config
+            # Urxvt base
+            sed -i "s/$Urxvt_Base.*/URxvt.background: $opc1/g" ~/.Xresources
+            xrdb ~/.Xresources
+            # Qtile
+            if [[ $get_wm == LG3D ]]; then
+                sed -i "s/$Qtile_Base/$opc1/" ~/.config/qtile/config.py
+            # i3-gaps
+            elif [[ $get_wm == i3 ]]; then
+                sed -i "s/$I3_Base/$opc1/g" ~/.config/i3/config
+                i3-msg restart &> /dev/null
+            # Herbstluftwm
+            elif [[ $get_wm == herbstluftwm ]]; then
+              sed -i "s/$Hbwm_Base/$opc1/g" ~/.config/herbstluftwm/autostart
+              herbstclient reload
+            # Fvwm
+            elif [[ $get_wm == FVWM ]]; then
+              sed -i "s/$Fvwm_Color/$opc1/g" ~/.fvwm/Config/COLORS
+            fi
+            # Polybar
+            if pgrep polybar &> /dev/null; then
+              sed -i "s/$Polybar_Base.*/background = $opc1/g" ~/.config/polybar/config
+            # Tint2
+            elif pgrep tint2 &> /dev/null; then
+              sed -i "s/$Tint2_Base/$opc1/g" ~/.config/tint2/tint2rc
+              killall -q tint2
+              tint2 &> /dev/null &
+            fi
+    else
+        echo " "
+        echo -e "$d${f1}Base error.$t [$opc1] $d${f1}It is not a valid color."
+        exit 0
+    fi
+}
+
+    case $base_color in 
+      y) Change_Base  
+      sleep 0.5
+      echo " "
+      echo -e "Base\c "; sleep 1; echo "      $ok modified"
+      echo -e "Exit..."; sleep 1  ;;
+      n) BASE   ;;     
+    esac
+
+}
+####################################################################
+# █░█ █ █▀▀ █░█ █░░ █ █▀▀ █░█ ▀█▀   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# █▀█ █ █▄█ █▀█ █▄▄ █ █▄█ █▀█ ░█░   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+####################################################################
+# It will only change the accent colors of the system.
+HIGHLIGHT(){
+clear
+BANNER
+
+# Receives the colors used as a base
+  echo -e "Indicate the color of ${f1}HIGHLIGHT$t"
+  echo -e "$d${f1}-> \c$t\n"
+  read -e -p "${t}Highlight Color${f1}$d$t = " opc2
+
+  # Confirms that the color value is correct
+  op2=$(echo "$opc2" | wc -c)
+  # Filters the current colors to hexadecimal values
+  color2=$(echo "$Gtk_Highlight" | awk '{print $3}' | sed 's/;//g')
+  echo ""
+  echo -e "------------------------------------"
+  echo "$d${f4}This is the current highlight color.$t"
+  echo -e "Highlight                 `colr " " -b "$color2"` $color2"
+  echo -e "------------------------------------"
+  echo "$d${f5}This is the new color.$t"
+  echo -e "Highlight                 `colr " " -b "$opc2"` $opc2"
+  echo -e "------------------------------------"
+  echo " "
+  echo -e "Apply change? $d${f2}y$t/$d${f1}n$t $d${f1}->$t \c"
+
+  read highlight_color
+
+  # Recognizes the window manager
+  get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
+
+Change_Highlight(){
+        
+   if [[ $op2 -eq 8 ]]; then
+        # Gtk highlight
+        sed -i "s/$Gtk_Highlight.*/@define-color highlight $opc2;/g" ~/.themes/Midnight/gtk-3.0/colors.css
+        # Eww highlight
+        sed -i "s/$Eww_Highlight.*/highlight: $opc2;/g" ~/.config/eww/colors.scss
+        eww reload
+        # Qtile
+        if [[ $get_wm == LG3D ]]; then
+            sed -i "s/$Qtile_Highlight/$opc2/" ~/.config/qtile/config.py
+        #I3-gaps
+        elif [[ $get_wm == i3 ]]; then
+            sed -i "s/$I3_Highlight/$opc2/g" ~/.config/i3/config
+            i3-msg restart &> /dev/null 
+        # Herbstluftwm
+        elif [[ $get_wm == herbstluftwm ]]; then
+            sed -i "s/$Hbwm_Highlight/$opc2/g" ~/.config/herbstluftwm/autostart
+            herbstclient reload           
+        fi
+        # Polybar
+        if pgrep polybar &> /dev/null; then
+          sed -i "s/$Polybar_Highlight.*/highlight = $opc2/g" ~/.config/polybar/config
+        fi
+    else
+        echo " "
+        echo -e "$d${f1}Highlight error.$t [$opc2] $d${f1}It is not a valid color."
+        exit 0
+    fi
+}
+
+    case $highlight_color in 
+      y) Change_Highlight  
+      sleep 0.5
+      echo " "
+      echo -e "Highlight\c "; sleep 1; echo "      $ok modified"
+      echo -e "Exit..."; sleep 1  ;;
+      n) HIGHLIGHT  ;;
+    esac
+
+}
+#####################################################
+# █▀▀ █▀█ █▄░█ ▀█▀   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# █▀░ █▄█ █░▀█ ░█░   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+#####################################################
+# It will only change the colors of the system fonts.
+FONT(){
+clear
+BANNER
+
+# Receives the colors used as a base
+  echo -e "Indicate the color of ${f1}FONT$t"
+  echo -e "$d${f1}-> \c$t\n"
+  read -e -p "${t}Font Color${f1}$d$t = " opc3
+
+  # Confirms that the color value is correct
+  op3=$(echo "$opc3" | wc -c)
+  
+  # Filters the current colors to hexadecimal values
+  color3=$(echo "$Gtk_Font" | awk '{print $3}' | sed 's/;//g')
+  echo ""
+  echo -e "------------------------------------"
+  echo "$d${f4}This is the current font color.$t"
+  echo -e "Font                 `colr " " -b "$color3"` $color3"
+  echo -e "------------------------------------"
+  echo "$d${f5}This is the new color.$t"
+  echo -e "Font                 `colr " " -b "$opc3"` $opc3"
+  echo -e "------------------------------------"
+  echo " "
+  echo -e "Apply change? $d${f2}y$t/$d${f1}n$t $d${f1}->$t \c"
+
+  read font_color
+
+  Change_Font(){
+    if [[ $op3 -eq 8 ]]; then
+        # Gtk font
+        sed -i "s/$Gtk_Font.*/@define-color font $opc3;/g" ~/.themes/Midnight/gtk-3.0/colors.css
+        # Eww font
+        sed -i "s/$Eww_Font.*/font: $opc3;/g" ~/.config/eww/colors.scss
+        eww reload
+        # Termite fore
+        sed -i "s/$Termite_Fore.*/foreground = $opc3/g" ~/.config/termite/config
+        sed -i "s/$Termite_Fore_Bold.*/foreground_bold = $opc3/g" ~/.config/termite/config
+        # Urxvt
+        sed -i "s/$Urxvt_Fore.*/URxvt.foreground: $opc3/g" ~/.Xresources
+        # Polybar
+        if pgrep polybar &> /dev/null; then
+          sed -i "s/$Polybar_Font.*/foreground = $opc3/g" ~/.config/polybar/config
+        elif pgrep tint2 &> /dev/null; then
+          sed -i "s/$Tint2_Font/$opc3/g" ~/.config/tint2/tint2rc
+          killall -q tint2
+          tint2 &> /dev/null & 
+        fi
+    else
+       echo -e "$d${f1}Font error.$t [$opc3] $d${f1}It is not a valid color."
+    fi
+
+}
+
+  case $font_color in 
+      y) Change_Font  
+      sleep 0.5
+      echo " "
+      echo -e "font\c "; sleep 1; echo "      $ok modified"
+      echo -e "Exit..."; sleep 1  ;;
+
+      n) FONT  ;;  
+    esac
+
+}
+
+################################################################
+# █▀▀ ▄▀█ █▀█ ▀█▀ █░█ █▀█ █▀▀   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# █▄▄ █▀█ █▀▀ ░█░ █▄█ █▀▄ ██▄   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+################################################################
+# It will only capture the background colors and save 
+# them for use with the other functions
+CAPTURE(){
+clear
+BANNER
+
+  echo -e "$d${f1}------------------------------------------------$t${d}"
+  echo -e "${f2}::${t}${d} How many colors should be displayed?"
+  echo -e "${f1}-> \c$t"
+
+# Ask the number of colors to be captured
+  read -e -p "${t}Number of colors${f1}${d} = " color
+  
+Image=$(cat ~/.fehbg | sed -n 2p | cut -d "'" -f2)
+Colors=$(convert $Image -format %c -colorspace LAB -colors $color histogram:info:- | sort -n -r | awk '{print $3}' | cut -c -7)
+Image_Name=$(cat ~/.fehbg | sed 's/.*\///g' | sed -n 2p)
+
+  echo -e "${f1}--------------------------------------------------$t${d}"
+  echo -e "${f1}:: ${t}Ready! The image was separated into ${f1}${d}$color$t colors$t${d}"
+  echo -e "${f1}:: ${t}Would you like to save the color scheme?$t (${f2}${d}y$t${d}/${f1}n$t${d})"
+  echo -e "${f1}-> \c$t"
+
+read -e yes_no
+
+case $yes_no in
+*y|Y|yes|Yes*)
+if find ~/.magic &> /dev/null ; then
+echo -e "====================================
+Image name: $Image_Name
+Total Colors: $color
+Date: '`date`'
+====================================" >> ~/.magic/.color.txt
+        echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.magic/.color.txt
+        echo -e "${f1}----------------------------------------------------------$t"
+        echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.magic/.colors.txt"
+        echo -e "${f1}----------------------------------------------------------$t"
+        echo " "
+else
+  mkdir ~/.magic
+echo -e "====================================
+Image name: $Image_Name
+Total Colors: $color
+Date: '`date`'
+====================================" >> ~/.magic/.color.txt
+        echo -e "$Colors" | paste - - - - | sort -t, -nk3 >> ~/.magic/.color.txt
+        echo -e "${f1}----------------------------------------------------------------$t"
+        echo -e "${f1}:: ${t}${f2}The color scheme was stored in ${f1}/home/$USER/.magic/.colors.txt"
+        echo -e "${f1}----------------------------------------------------------------$t"
+        echo " "
+fi
+esac
+}
+###################################################
+# █▄░█ █▀█ █░█░█   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# █░▀█ █▄█ ▀▄▀▄▀   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+###################################################
+# You will use the file created by the save function,
+# to modify all aspects at once, using one of these previously saved items.
+NOW(){
+
+clear
+BANNER
+echo "These are the available themes."
+echo -e "--------------------------------------------"
+THEME_NAMES=$(cat ~/.magic/magic-themes.txt | grep "Theme name" | cut -d "(" -f2 | sed 's/)//g')
+
+echo "$THEME_NAMES"
+echo " "
+read -e -p "${t}Theme name${f1} -> $t" NAME
+
+  THEMECOLORS=$(cat ~/.magic/magic-themes.txt | grep "$NAME" | sed -n 2,34p | cut -d '#' -f2 | sed 's/^/#/g')
+  COLOR1=$(echo "$THEMECOLORS" | sed -n 1p)
+  COLOR2=$(echo "$THEMECOLORS" | sed -n 2p)
+  COLOR3=$(echo "$THEMECOLORS" | sed -n 3p)
+
+  CHANGE(){
+  # Recognizes the window manager
+  get_wm=$(wmctrl -m | grep Name | awk '{print$2}')
+  # Base
+  # Gtk base
+  sed -i "s/$Gtk_Base.*/@define-color base $COLOR1;/g" ~/.themes/Midnight/gtk-3.0/colors.css 
+  # Eww base
+  sed -i "s/$Eww_Base.*/base: $COLOR1;/g" ~/.config/eww/colors.scss
+  # Termite base
+  sed -i "s/$Termite_Base.*/background = $COLOR1/g" ~/.config/termite/config
+  # Urxvt base
+  sed -i "s/$Urxvt_Base.*/URxvt.background: $COLOR1/g" ~/.Xresources
+  xrdb ~/.Xresources
+  # Qtile
+  if [[ $get_wm == LG3D ]]; then
+      sed -i "s/$Qtile_Base/$COLOR1/" ~/.config/qtile/config.py
+  # i3-gaps
+  elif [[ $get_wm == i3 ]]; then
+      sed -i "s/$I3_Base/$COLOR1/g" ~/.config/i3/config
+      i3-msg restart &> /dev/null
+  # Herbstluftwm
+  elif [[ $get_wm == herbstluftwm ]]; then
+    sed -i "s/$Hbwm_Base/$COLOR1/g" ~/.config/herbstluftwm/autostart
+    herbstclient reload
+  # Fvwm
+  elif [[ $get_wm == FVWM ]]; then
+    sed -i "s/$Fvwm_Color/$COLOR1/g" ~/.fvwm/Config/COLORS
+  fi
+  # Polybar
+  if pgrep polybar &> /dev/null; then
+    sed -i "s/$Polybar_Base.*/background = $COLOR1/g" ~/.config/polybar/config
+  # Tint2
+  elif pgrep tint2 &> /dev/null; then
+    sed -i "s/$Tint2_Base/$COLOR1/g" ~/.config/tint2/tint2rc
+    killall -q tint2
+    tint2 &> /dev/null &
+  fi
+
+  # Highlight
+
+  # Gtk highlight
+  sed -i "s/$Gtk_Highlight.*/@define-color highlight $COLOR2;/g" ~/.themes/Midnight/gtk-3.0/colors.css
+  # Eww highlight
+  sed -i "s/$Eww_Highlight.*/highlight: $COLOR2;/g" ~/.config/eww/colors.scss
+  # Qtile
+  if [[ $get_wm == LG3D ]]; then
+      sed -i "s/$Qtile_Highlight/$COLOR2/" ~/.config/qtile/config.py
+  elif [[ $get_wm == i3 ]]; then
+      sed -i "s/$I3_Highlight/$COLOR2/g" ~/.config/i3/config
+      i3-msg restart &> /dev/null 
+  # Herbstluftwm
+  elif [[ $get_wm == herbstluftwm ]]; then
+      sed -i "s/$Hbwm_Highlight/$COLOR2/g" ~/.config/herbstluftwm/autostart
+      herbstclient reload           
+  fi
+  # Polybar
+  if pgrep polybar &> /dev/null; then
+    sed -i "s/$Polybar_Highlight.*/highlight = $COLOR2/g" ~/.config/polybar/config
+  fi
+
+  # Font
+
+  # Gtk font
+  sed -i "s/$Gtk_Font.*/@define-color font $COLOR3;/g" ~/.themes/Midnight/gtk-3.0/colors.css
+  # Eww font
+  sed -i "s/$Eww_Font.*/font: $COLOR3;/g" ~/.config/eww/colors.scss
+  eww reload
+  # Termite fore
+  sed -i "s/$Termite_Fore.*/foreground = $COLOR3/g" ~/.config/termite/config
+  sed -i "s/$Termite_Fore_Bold.*/foreground_bold = $COLOR3/g" ~/.config/termite/config
+  # Urxvt
+  sed -i "s/$Urxvt_Fore.*/URxvt.foreground: $COLOR3/g" ~/.Xresources
+  # Polybar
+  if pgrep polybar &> /dev/null; then
+    sed -i "s/$Polybar_Font.*/foreground = $COLOR3/g" ~/.config/polybar/config
+  elif pgrep tint2 &> /dev/null; then
+    sed -i "s/$Tint2_Font/$COLOR3/g" ~/.config/tint2/tint2rc
+    killall -q tint2
+    tint2 &> /dev/null & 
+  fi  
+}
+
+echo -e "These are the colors of the theme$d${f2} ($NAME)$t"
+echo -e "-----------------------------------------"
+echo -e "$d${f6}Base$t                 `colr " " -b "$COLOR1"` $COLOR1"
+echo -e "$d${f6}Highlight$t            `colr " " -b "$COLOR2"` $COLOR2"
+echo -e "$d${f6}Fonts$t                `colr " " -b "$COLOR3"` $COLOR3"
+echo -e "-----------------------------------------"
+
+ read -e -p "Would you like to use this theme? $d${f2}y$t/$d${f1}n$t/$d${f3}exit$t $d${f1}->$t " CONFIRM
+
+case $CONFIRM in
+  y) CHANGE  ;;
+  n) NOW   ;;
+  *e|E|Exit|exit|EXIT*) exit 0
+esac
+sleep 0.5
+echo -e "${f2}If any aspect has not been changed,"
+echo "please restart your window manager$t"
+echo " "
+echo -e "Base\c "; sleep 0.5; echo "      $ok modified"
+sleep 0.5
+echo -e "Highlight\c "; sleep 0.5; echo " $ok modified"
+sleep 0.5
+echo -e "Font\c "; sleep 0.5; echo "      $ok modified"
+sleep 0.5
+
+}
+###################################################
+# █▀ ▄▀█ █░█ █▀▀   █▀▀ █░█ █▄░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+# ▄█ █▀█ ▀▄▀ ██▄   █▀░ █▄█ █░▀█ █▄▄ ░█░ █ █▄█ █░▀█
+###################################################
+# If you configure a theme, using one of the functions, and want to save it,
+# to use it later, use that function, and use the 
+# --now function, to apply one of these themes.
+SAVE(){
+clear
+BANNER
+
+echo -e "$d${f1}-------------------------------------$t${d}"
+
+echo -e "Name your new theme."
+echo -e "${f1}-> \c$t"
+
+# Filters the current colors to hexadecimal values
+color1=$(echo "$Gtk_Base" | awk '{print $3}' | sed 's/;//g')
+color2=$(echo "$Gtk_Highlight" | awk '{print $3}' | sed 's/;//g')
+color3=$(echo "$Gtk_Font" | awk '{print $3}' | sed 's/;//g')
+
+read theme_name
+
+  if find ~/.magic | grep magic-themes.txt &> /dev/null; then
+    echo -e "--------------------------
+Theme name ($theme_name)
+
+$theme_name Base        $color1
+$theme_name Highlight   $color2
+$theme_name Font        $color3
+--------------------------
+" >> ~/.magic/magic-themes.txt  
+else
+    echo -e "--------------------------
+Theme ($theme_name)
+$theme_name Base        $color1
+$theme_name Highlight   $color2
+$theme_name Font        $color3
+--------------------------"
+>> ~/.magic/magic-themes.txt  
+fi
+
+echo -e "${t}Save to:   $d${f1}/home/$USER/.magic/magic-themes.txt"
+echo -e "${t}Name:      $d${f1}$theme_name"
+
+}
+
+case $1 in
+  --help) HELP  ;;
+  --all) ALL  ;;
+  --base) BASE  ;;
+  --highlight) HIGHLIGHT  ;;
+  --font) FONT  ;;
+  --capture) CAPTURE  ;;
+  --now) NOW  ;;
+  --save) SAVE  ;;
+  *) HELP  ;;
+esac
